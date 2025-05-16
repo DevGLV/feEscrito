@@ -23,9 +23,9 @@ if uploaded_file is not None:
         unicodedata.normalize("NFKD", col).encode("ascii", errors="ignore").decode("utf-8").strip().lower()
         for col in df.columns
     ]
-
-    # Mostra as colunas padronizadas para debug
-    st.write("✅ Colunas padronizadas:", df.columns.tolist())
+    
+    # Corrige possíveis erros na coluna 'mes'
+    df.columns = [col.replace("maas", "mes").replace("mees", "mes").replace("mes_", "mes") for col in df.columns]
 
     # Mapeia abreviações de mês para nomes completos
     meses_completos = {
@@ -35,8 +35,9 @@ if uploaded_file is not None:
         'out': 'outubro', 'nov': 'novembro', 'dez': 'dezembro'
     }
 
-    if 'mes' in df.columns and 'ano' in df.columns:
-        df['mes'] = df['mes'].astype(str).str.lower().map(meses_completos)
+    if 'mes' in df.columns:
+        df['mes'] = df['mes'].str.lower().map(meses_completos)
+
         ordem_meses = list(meses_completos.values())
         df['mes'] = pd.Categorical(df['mes'], categories=ordem_meses, ordered=True)
 
@@ -116,5 +117,3 @@ if uploaded_file is not None:
 
         st.divider()
         st.caption("© Gabriel Luis - Análise de Dados | Ouvidoria 2025")
-    else:
-        st.warning("⚠️ A base precisa ter as colunas 'mes' e 'ano'. Verifique o arquivo enviado.")
