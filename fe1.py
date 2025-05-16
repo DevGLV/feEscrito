@@ -18,15 +18,14 @@ uploaded_file = st.file_uploader("📁 Escolha um arquivo CSV", type="csv")
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file, delimiter=";", encoding='latin-1')
 
-    # Padroniza nomes de colunas
-    df.columns = (
-        df.columns
-        .str.strip()
-        .str.lower()
-        .str.normalize('NFKD')
-        .str.encode('ascii', errors='ignore')
-        .str.decode('utf-8')
-    )
+    # Padroniza nomes de colunas: remove acentos, espaços e deixa tudo minúsculo
+    df.columns = [
+        unicodedata.normalize("NFKD", col).encode("ascii", errors="ignore").decode("utf-8").strip().lower()
+        for col in df.columns
+    ]
+
+    # Mostra as colunas padronizadas para debug
+    st.write("✅ Colunas padronizadas:", df.columns.tolist())
 
     # Mapeia abreviações de mês para nomes completos
     meses_completos = {
@@ -36,9 +35,8 @@ if uploaded_file is not None:
         'out': 'outubro', 'nov': 'novembro', 'dez': 'dezembro'
     }
 
-    if 'mes' in df.columns:
-        df['mes'] = df['mes'].str.lower().map(meses_completos)
-
+    if 'mes' in df.columns and 'ano' in df.columns:
+        df['mes'] = df['mes'].astype(str).str.lower().map(meses_completos)
         ordem_meses = list(meses_completos.values())
         df['mes'] = pd.Categorical(df['mes'], categories=ordem_meses, ordered=True)
 
@@ -118,3 +116,5 @@ if uploaded_file is not None:
 
         st.divider()
         st.caption("© Gabriel Luis - Análise de Dados | Ouvidoria 2025")
+    else:
+        st.warning("⚠️ A base precisa ter as colunas 'mes' e 'ano'. Verifique o arquivo enviado.")
